@@ -1,0 +1,10 @@
+node_modules/
+dist/
+public/assets/
+*.log
+.env
+.env.*
+!.env.example
+*-preview.png
+model-check.png
+tracking-latency.png

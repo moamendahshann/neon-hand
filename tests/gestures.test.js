@@ -1,0 +1,5 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {measureHand,GestureGate,cameraError} from '../src/gestures.js';
+test('hand ratios invariant to scale and translation',()=>{const hand=Array.from({length:21},(_,i)=>({x:Math.sin(i)*.1+.4,y:i*.02+.1,z:i*.001}));const scaled=hand.map(p=>({x:p.x*2+1,y:p.y*2-1,z:p.z*2}));const a=measureHand(hand,hand),b=measureHand(hand,scaled);assert.ok(Math.abs(a.open-b.open)<1e-10);assert.ok(Math.abs(a.size-b.size)<1e-10);assert.equal(a.x,1-(hand[0].x+hand[5].x+hand[17].x)/3)});
+test('gesture hysteresis and dwell reject transient changes',()=>{const g=new GestureGate();g.update(.9,0);assert.equal(g.update(.9,100),.5);assert.equal(g.update(.9,150),1);assert.equal(g.update(.1,180),1);assert.equal(g.update(.5,250),1);g.update(.1,300);assert.equal(g.update(.1,450),0)});
+test('permission, missing and busy camera messages',()=>{for(const name of ['NotAllowedError','NotFoundError','NotReadableError'])assert.ok(cameraError({name}).length>30)});

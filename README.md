@@ -1,54 +1,68 @@
-# NEON FIELD — طاقة تفاعلية بحركة اليد
+# NEON FIELD
 
-تطبيق محلي بـJavaScript وThree.js وMediaPipe يرسم جزيئات وخيوط نيون ثلاثية الأبعاد على خلفية سوداء، مع تتبّع يد واحدة أو التحكم بالماوس. واجهته عربية.
+**Energy at your fingertips.** An interactive 3D neon particle field controlled by hand tracking or a mouse, with an Arabic interface.
 
-## التشغيل على Windows
+[![Build and tests](https://github.com/moamendahshann/neon-hand/actions/workflows/ci.yml/badge.svg)](https://github.com/moamendahshann/neon-hand/actions/workflows/ci.yml)
 
-ثبّت Node.js 24 LTS، ثم نزّل المشروع وفك الضغط وافتح `START.bat` بالنقر المزدوج. سيُثبت الاعتماديات ويجهّز نموذج اليد عند الحاجة، ثم يفتح http://localhost:5173.
+**[Launch the live demo](https://neon-hand-moamen.daringtide16.chatgpt.site)** · [العربية](README.ar.md) · [Contributing](CONTRIBUTING.md)
 
-أو من Terminal داخل مجلد المشروع:
+![Actual screenshot of the published application](docs/preview.png)
 
-```powershell
-npm.cmd ci
-npm.cmd run dev
+## Try it
+
+Open the demo and choose **تجربة بالماوس** (mouse demo), or **بدء الكاميرا** (start camera) and grant camera access. A camera is optional. The first camera session downloads the model and WASM assets.
+
+| Control | Result |
+| --- | --- |
+| Move one hand | Move the field in a mirrored direction |
+| Open palm / close fist | Spread particles / gather the energy |
+| Thumb–index distance | Change the field's size relative to palm scale |
+| No visible hand | Ease into automatic motion |
+| Mouse move / press / release | Move / gather / spread |
+| Mouse wheel | Resize |
+| H / F | Hide the interface / toggle fullscreen |
+
+The camera preview is hidden by default and can be enabled in settings. Stop camera closes its media tracks. There is no separate dot trail behind movement.
+
+## Run locally
+
+Use Node.js 24. On Windows, double-click **START.bat** after downloading the source. Or run:
+
+```bash
+npm ci
+npm run dev
 ```
 
-التشغيل الأول بعد تنزيل المصدر يحتاج الإنترنت لتثبيت الحزم وتنزيل نموذج اليد الرسمي. بعدها تكون ملفات النموذج وWASM محلية داخل `public/assets` ويمكن التشغيل دون إنترنت. لا تفتح `index.html` مباشرة. لإيقاف الخادم اضغط Ctrl+C في نافذة التشغيل.
+Open http://localhost:5173. Asset preparation runs automatically before development and production builds. The first setup needs internet; subsequent local runs use the downloaded assets. Do not open index.html directly.
 
-## التحكم
+## How it works
 
-- زر بدء الكاميرا يطلب الإذن؛ زر الإيقاف يغلق المسارات وينهي عامل التتبّع.
-- اتجاه الحركة كالمرآة. الكف المفتوح ينشر الطاقة والقبضة تجمعها، والمسافة النسبية بين الإبهام والسبابة تتحكم بالحجم.
-- عند غياب اليد تبدأ حركة تلقائية. لا يوجد ذيل نقاط خلف الحركة.
-- تجربة الماوس: حرّك المؤشر، واضغط للتجميع، وأفلت للانتشار، واستخدم العجلة للتحجيم.
-- H لإخفاء الواجهة وإظهارها، وF لملء الشاشة. معاينة الكاميرا اختيارية ومخفية افتراضيًا.
-- في ضبط المجال توجد إعدادات اللون والتوهج والجزيئات والحساسية، وخيار «سريع جدًا» الافتراضي أو «توهج سينمائي» الأعلى استهلاكًا.
+- **Three.js / WebGL2:** GPU particle motion and animated filaments, with a fast direct-render mode and optional cinematic bloom.
+- **MediaPipe Hand Landmarker:** inference in a dedicated classic Web Worker; GPU acceleration with CPU fallback and model warm-up before readiness.
+- **Gesture processing:** hand-relative ratios, a dwell threshold for open/closed gestures and separate position smoothing.
+- **Performance:** one inference request in flight, no frame queue, adaptive render resolution and a target rendering ceiling around 60 FPS. Defaults favour responsiveness over density.
 
-## الأداء والخصوصية
+Settings control colour, glow, particle count and motion sensitivity. Rendering FPS and inference duration are different measurements; both are useful when diagnosing delays.
 
-الرسم على GPU، مع 3000 جزيء افتراضيًا، وسقف يقارب 60FPS ودقة تتكيّف حسب الأداء. الخيوط تتحرك داخل shader. التتبّع داخل Web Worker، ويحاول GPU مع رجوع إلى CPU عند عدم الدعم، ولا يُرسل أكثر من إطار للاستدلال في الوقت نفسه. يُجهّز النموذج مسبقًا لتقليل توقف أول إطار. يظهر زمن الاستدلال ونوع المعالج في أسفل الواجهة أثناء تشغيل الكاميرا.
+## Camera privacy
 
-كل معالجة الصور محلية دون تسجيل أو رفع الفيديو أو خدمات تحليلات. خادم localhost يقدم الملفات فقط. جودة التتبّع تعتمد على الإضاءة وإظهار الأصابع والجهاز والمتصفح؛ لا يُضمن انعدام التقطيع.
+Video processing happens on the visitor's device. The application does not record or upload camera frames and includes no analytics. Hosting serves application files and model assets. Camera access needs HTTPS or localhost and permission from the visitor.
 
-## الفحص
+## Validation and limits
 
-```powershell
-npm.cmd test
-npm.cmd run build
+```bash
+npm test
+npm run build
 ```
 
-لفحص تهيئة النموذج واستدلال على إطار اصطناعي افتح http://localhost:5173/model-check.html بعد تشغيل الخادم. هذا لا يختبر تتبّع يد حقيقية.
+The CI workflow checks unit tests and the production build. For model initialisation and synthetic-frame inference, open /model-check.html while the application is served. This does not test real-hand tracking quality.
 
-اختبارات المتصفح الإضافية في `scripts/browser-test.mjs` تحتاج Chromium: `npx.cmd playwright install chromium` ثم `node scripts/browser-test.mjs`. راجع `VALIDATION.md` للنتائج الفعلية والقيود؛ لا تُعتبر هذه الاختبارات ناجحة لمجرد وجودها.
+The application and local model inference were inspected in a browser, including on the published site. A live hand and camera were not verified by the implementation agent. Lighting, occlusion, browser support and device performance affect results; no specific FPS or absence of stutter is guaranteed. The originally described reference video was not available for visual comparison.
 
-لم يتوفر الفيديو المرجعي أثناء التنفيذ، ولم يُتحقق من التطابق معه أو من دقة تتبّع يد حقيقية. نجح البناء واختبارات الوحدات وفحص تحميل النموذج واستدلال اصطناعي في المتصفح.
+See [the detailed validation record](VALIDATION.md). The optional scripts/browser-test.mjs suite requires a Playwright Chromium installation and is not reported as passed in that record.
 
-## المصادر الرسمية
+## References
 
-- [Three.js](https://threejs.org/manual/pages/installation.html)
-- [MediaPipe Hand Landmarker](https://developers.google.com/edge/mediapipe/solutions/vision/hand_landmarker/web_js)
-- [مرجع HandLandmarker](https://developers.google.com/edge/api/mediapipe/js/tasks-vision.handlandmarker)
-- [النموذج الرسمي](https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task)
-- [Vite](https://vite.dev/guide/)
+[Three.js](https://threejs.org/manual/pages/installation.html) · [MediaPipe web guide](https://developers.google.com/edge/mediapipe/solutions/vision/hand_landmarker/web_js) · [Vite](https://vite.dev/guide/)
 
-الحزم والنموذج تخضع لتراخيص أصحابها. لا تُضمّن ملفات `node_modules` أو `dist` أو `public/assets` المولدة في المستودع؛ يجري تجهيزها تلقائيًا عند التشغيل والبناء.
+Student portfolio project developed with AI assistance. Third-party libraries and model assets retain their own licenses. No open-source license has been selected for this repository; public visibility alone does not grant broad reuse rights.
